@@ -76,17 +76,52 @@ def pipesBM():
 	os.system("rm test.txt")
 	os.system("rm test2.txt")
 
-def child():
+def write1(count):
+	os.system("echo '" + str(count) + "' >> contextpipes.txt")
+	count += 1
+	
+	if count <= 100:
+		write2(count)
+	else:
+		contextpipesBM(count)
+
+def write2(count):
+	os.system("echo '" + str(count) + "' >> contextpipes.txt")
+	count += 1
+
+	if count <= 100:
+		write1(count)
+	else:
+		contextpipesBM(count)
+
+def contextpipesBM(count):
+	global contextt1
+	if count == 0:
+		print "Context switching benchmark"
+		#global contextt1
+		contextt1 = datetime.datetime.now()
+		write1(count)
+	else:
+		t2 = datetime.datetime.now()
+		t3 = t2 - contextt1
+
+		print "Pre-contextswitching time: " + str(contextt1)
+		print "Post-contextswitching time: " + str(t2)
+		print"Difference: " + str(t3)
+
+		os.system("rm contextpipes.txt")
+
+def simplechild():
 	print "Child process - " + str(os.getpid())
 	os._exit(0)
 
-def parentBM():
+def processBM():
 	print "Process creation benchmark"
 
 	t1 = datetime.datetime.now()
-	newprocess=os.fork()
+	newprocess = os.fork()
 	if newprocess == 0:
-		child()
+		simplechild()
 	else:
 		print "Parent process - " + str(os.getpid())
 	t2 = datetime.datetime.now()
@@ -97,6 +132,54 @@ def parentBM():
 	print "Difference: " + str(t3)
 	print ""
 
+
+'''
+def complexchild(count):
+	print "Child " + str(os.getpid()) + " - " + str(count)
+	#os.system("echo '" + str(count) + " - child " + str(os.getpid())  + "' >> contextpipe.txt")
+	count += 1
+	
+	if count == 10:
+		os._exit(0)
+	else:
+		complexparent(count)
+
+
+def complexparent(count):	
+	process = os.fork()
+
+	print "Parent " + str(os.getpid()) + " - " + str(count)
+	#os.system("echo '" + str(count) + " - parent " + str(os.getpid())  + "' >> contextpipe.txt")
+	count += 1
+
+	if count == 10:
+		t2 = datetime.datetime.now()
+		t3 = t2 - t1
+		os._exit(0)
+
+	if process == 0:
+		complexchild(count)
+	else:
+		print "in parent else statement"
+		#complexchild(count)
+
+
+def contextBM():
+	print "Context switching benchmark"
+	
+	t1 = datetime.datetime.now()
+	complexparent(0)
+	t2 = datetime.datetime.now()
+	t3 = t2 - t1
+
+	print "Pre-context-switch time: " + str(t1)
+	print "Post-context-switch time: " + str(t2)
+	print "Difference: " + str(t3)
+'''
+
+
 copyfilesBM()
 pipesBM()
-parentBM()
+processBM()
+#contextBM()
+contextpipesBM(0)
