@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
-import time
 import datetime
-import shutil
-import socket
+#import socket
 import os
 
 def copytime(filesrc,filedst):
@@ -13,7 +11,7 @@ def copytime(filesrc,filedst):
 	t3 = t2 - t1
 
 	print "Evaluating " + filesrc	
-	#os.system("rsync -rtv " + filesrc + " " + str(filedst) + " | grep 'bytes/sec'")
+	os.system("rsync -rtv " + filesrc + " " + filedst + " | grep 'bytes/sec'")
 	print "Pre-copy time: " + str(t1)
 	print "Post-copy time: " + str(t2)
 	print "Difference: " + str(t3)
@@ -21,14 +19,14 @@ def copytime(filesrc,filedst):
 
 	os.system("rm copyfile.txt")
 
-def copyfiles():	
+def copyfilesBM():	
 	#file = open(filesrc, "rb")
 	#blocksize = os.path.getsize(filesrc)
 	#sock = socket.socket()
 	#sock.connect(("127.0.0.1", 8021))
 	#os.sendfile(filesrc, filedst, 0, blocksize)		
 	
-	print "Copy file timestamps"
+	print "Copy file benchmark"
 
 	filepath = os.getcwd()	
 
@@ -46,8 +44,8 @@ def copyfiles():
 	os.system("rm 256bFile.txt")
 	
 
-def pipe():
-	print "Pipe timestamps"
+def pipesBM():
+	print "Pipes benchmark"
 
 	os.system("dd if=/dev/zero of=512bFile.txt bs=512 count=1 > /dev/null 2>&1")	
 
@@ -78,9 +76,27 @@ def pipe():
 	os.system("rm test.txt")
 	os.system("rm test2.txt")
 
+def child():
+	print "Child process - " + str(os.getpid())
+	os._exit(0)
 
+def parentBM():
+	print "Process creation benchmark"
 
+	t1 = datetime.datetime.now()
+	newprocess=os.fork()
+	if newprocess == 0:
+		child()
+	else:
+		print "Parent process - " + str(os.getpid())
+	t2 = datetime.datetime.now()
+	t3 = t2 - t1
+	
+	print "Pre-child time: " + str(t1)
+	print "Post-child time: " + str(t2)
+	print "Difference: " + str(t3)
+	print ""
 
-copyfiles()
-pipe()
-
+copyfilesBM()
+pipesBM()
+parentBM()
