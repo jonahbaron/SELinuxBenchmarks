@@ -11,7 +11,7 @@ def copytime(filesrc,filedst):
 	t3 = t2 - t1
 
 	print "Evaluating " + filesrc	
-	os.system("rsync -rtv " + filesrc + " " + filedst + " | grep 'bytes/sec'")
+	os.system("rsync -Wv " + filesrc + " " + filedst + " | grep 'bytes/sec'")
 	print "Pre-copy time: " + str(t1)
 	print "Post-copy time: " + str(t2)
 	print "Difference: " + str(t3)
@@ -83,7 +83,7 @@ def write1(count):
 	if count <= 100:
 		write2(count)
 	else:
-		contextpipesBM(count)
+		pipeswitchingBM(count)
 
 def write2(count):
 	os.system("echo '" + str(count) + "' >> contextpipes.txt")
@@ -92,13 +92,12 @@ def write2(count):
 	if count <= 100:
 		write1(count)
 	else:
-		contextpipesBM(count)
+		pipeswitchingBM(count)
 
-def contextpipesBM(count):
+def pipeswitchingBM(count):
 	global contextt1
 	if count == 0:
 		print "Context switching benchmark"
-		#global contextt1
 		contextt1 = datetime.datetime.now()
 		write1(count)
 	else:
@@ -107,23 +106,22 @@ def contextpipesBM(count):
 
 		print "Pre-contextswitching time: " + str(contextt1)
 		print "Post-contextswitching time: " + str(t2)
-		print"Difference: " + str(t3)
+		print "Difference: " + str(t3)
+		print ""
 
 		os.system("rm contextpipes.txt")
-
-def simplechild():
-	print "Child process - " + str(os.getpid())
-	os._exit(0)
 
 def processBM():
 	print "Process creation benchmark"
 
 	t1 = datetime.datetime.now()
-	newprocess = os.fork()
-	if newprocess == 0:
-		simplechild()
-	else:
-		print "Parent process - " + str(os.getpid())
+	
+	simpleprocess = os.fork()
+	if simpleprocess == 0:
+		os._exit(0)
+	
+	os.waitpid(simpleprocess, 0)
+
 	t2 = datetime.datetime.now()
 	t3 = t2 - t1
 	
@@ -132,6 +130,24 @@ def processBM():
 	print "Difference: " + str(t3)
 	print ""
 
+def execlBM():
+	print "Execl commands benchmark"
+
+	t1 = datetime.datetime.now()
+	
+	execlprocess = os.fork()
+	if execlprocess == 0:
+		os.execl("/usr/bin/python", "python", "-V")
+	
+	os.waitpid(execlprocess, 0)
+
+	t2 = datetime.datetime.now()
+	t3 = t2 - t1
+
+	print "Pre-execl time: " + str(t1)
+	print "Post-execl time: " + str(t2)
+	print "Difference: " + str(t3)
+	print ""
 
 '''
 def complexchild(count):
@@ -140,7 +156,7 @@ def complexchild(count):
 	count += 1
 	
 	if count == 10:
-		os._exit(0)
+		os.exit(0)
 	else:
 		complexparent(count)
 
@@ -155,7 +171,7 @@ def complexparent(count):
 	if count == 10:
 		t2 = datetime.datetime.now()
 		t3 = t2 - t1
-		os._exit(0)
+		os.exit(0)
 
 	if process == 0:
 		complexchild(count)
@@ -180,6 +196,8 @@ def contextBM():
 
 copyfilesBM()
 pipesBM()
+pipeswitchingBM(0)
 processBM()
 #contextBM()
-contextpipesBM(0)
+execlBM()
+
