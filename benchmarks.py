@@ -1,8 +1,10 @@
 #!/usr/bin/python
 
 import datetime
-#import socket
 import os
+#import multiprocessing
+#from multiprocessing import Process, Lock
+#import socket
 
 def copytime(filesrc,filedst):
 	t1 = datetime.datetime.now()
@@ -12,9 +14,9 @@ def copytime(filesrc,filedst):
 
 	print "Evaluating " + filesrc	
 	os.system("rsync -Wv " + filesrc + " " + filedst + " | grep 'bytes/sec'")
-	print "Pre-copy time: " + str(t1)
-	print "Post-copy time: " + str(t2)
-	print "Difference: " + str(t3)
+	print "Pre-copy time: ", t1
+	print "Post-copy time: ", t2
+	print "Difference: ", t3
 	print ""
 
 	os.system("rm copyfile.txt")
@@ -30,13 +32,13 @@ def copyfilesBM():
 
 	filepath = os.getcwd()	
 
-	os.system("dd if=/dev/zero of=4kbFile.txt bs=4KB count=1 > /dev/null 2>&1")
+	os.system("dd if=/dev/urandom of=4kbFile.txt bs=4KB count=1 > /dev/null 2>&1")
 	copytime("4kbFile.txt",filepath)
 
-	os.system("dd if=/dev/zero of=1kbFile.txt bs=1KB count=1 > /dev/null 2>&1")
+	os.system("dd if=/dev/urandom of=1kbFile.txt bs=1KB count=1 > /dev/null 2>&1")
 	copytime("1kbFile.txt",filepath)
 
-	os.system("dd if=/dev/zero of=256bFile.txt bs=256 count=1 > /dev/null 2>&1")
+	os.system("dd if=/dev/urandom of=256bFile.txt bs=256 count=1 > /dev/null 2>&1")
 	copytime("256bFile.txt",filepath)
 
 	os.system("rm 4kbFile.txt")
@@ -47,7 +49,7 @@ def copyfilesBM():
 def pipesBM():
 	print "Pipes benchmark"
 
-	os.system("dd if=/dev/zero of=512bFile.txt bs=512 count=1 > /dev/null 2>&1")	
+	os.system("dd if=/dev/urandom of=512bFile.txt bs=512 count=1 > /dev/null 2>&1")	
 
 	pipecmd1 = "cat 512bFile.txt > test.txt"
 	pipecmd2 = "cat test.txt > test2.txt"
@@ -68,8 +70,8 @@ def pipesBM():
 	t4 = t2 - t1
 	t5 = t3 - t1
 	
-	print "Difference between t2 and t1: " + str(t4)
-	print "Difference between t3 and t1: " + str(t5)
+	print "Difference between t2 and t1: ", t4
+	print "Difference between t3 and t1: ", t5
 	print ""
 
 	os.system("rm 512bFile.txt")
@@ -104,9 +106,9 @@ def pipeswitchingBM(count):
 		t2 = datetime.datetime.now()
 		t3 = t2 - contextt1
 
-		print "Pre-contextswitching time: " + str(contextt1)
-		print "Post-contextswitching time: " + str(t2)
-		print "Difference: " + str(t3)
+		print "Pre-contextswitching time: ", contextt1
+		print "Post-contextswitching time: ", t2
+		print "Difference: ", t3
 		print ""
 
 		os.system("rm contextpipes.txt")
@@ -125,9 +127,9 @@ def processBM():
 	t2 = datetime.datetime.now()
 	t3 = t2 - t1
 	
-	print "Pre-child time: " + str(t1)
-	print "Post-child time: " + str(t2)
-	print "Difference: " + str(t3)
+	print "Pre-child time: ", t1
+	print "Post-child time: ", t2
+	print "Difference: ", t3
 	print ""
 
 def execlBM():
@@ -144,22 +146,54 @@ def execlBM():
 	t2 = datetime.datetime.now()
 	t3 = t2 - t1
 
-	print "Pre-execl time: " + str(t1)
-	print "Post-execl time: " + str(t2)
-	print "Difference: " + str(t3)
+	print "Pre-execl time: ", t1
+	print "Post-execl time: ", t2
+	print "Difference: ", t3
 	print ""
 
+def script(count):
+	#lock.acquire()
+	if count % 2 == 0:
+		os.system("perl -pe '$_= lc($_)' file1.txt > file2.txt")
+	elif count % 2 == 1:
+		os.system("perl -pe '$_= uc($_)' file2.txt > file1.txt")
+	else:
+		print "Error"
+	#lock.release()
+
+def concurrentBM():
+	print "Concurrent processes benchmark"
+
+	#lock = Lock()
+	os.system("dd if=/dev/urandom of=file1.txt bs=10KB count=1 > /dev/null 2>&1")
+	os.system("dd if=/dev/urandom of=file2.txt bs=10KB count=1 > /dev/null 2>&1")
+
+	
+	t1 = datetime.datetime.now()
+	for count in range(0,8):
+		script(count)
+		#returnvalue = Process(target=script, args=(lock, count)).start()
+	t2 = datetime.datetime.now()
+	t3 = t2 - t1
+
+	print "Pre-processes: ", t1
+	print "Post-processes: ", t2
+	print "Difference: ", t3
+	print ""
+
+	os.system("rm file1.txt")
+	os.system("rm file2.txt")
+
 '''
-def complexchild(count):
-	print "Child " + str(os.getpid()) + " - " + str(count)
-	#os.system("echo '" + str(count) + " - child " + str(os.getpid())  + "' >> contextpipe.txt")
+def completchild(count):
+	print "Child " + str(os.getpid()) + " - ",count)
+	#os.system("echo '" + str(count) + " - child ",os.getpid())  + "' >> contextpipe.txt")
 	count += 1
 	
 	if count == 10:
 		os.exit(0)
 	else:
 		complexparent(count)
-
 
 def complexparent(count):	
 	process = os.fork()
@@ -188,16 +222,21 @@ def contextBM():
 	t2 = datetime.datetime.now()
 	t3 = t2 - t1
 
-	print "Pre-context-switch time: " + str(t1)
-	print "Post-context-switch time: " + str(t2)
-	print "Difference: " + str(t3)
+	print "Pre-context-switch time: ", t1
+	print "Post-context-switch time: ", t2
+	print "Difference: ", t3
 '''
 
+def main():
+	print "Unix benchmarks"
+	print ""
+	copyfilesBM()
+	pipesBM()
+	pipeswitchingBM(0)
+	processBM()
+	#contextBM()
+	execlBM()
+	concurrentBM()
 
-copyfilesBM()
-pipesBM()
-pipeswitchingBM(0)
-processBM()
-#contextBM()
-execlBM()
-
+if __name__ == "__main__":
+	main()
