@@ -154,9 +154,9 @@ def execlBM():
 def script(count):
 	#lock.acquire()
 	if count % 2 == 0:
-		os.system("perl -pe '$_= lc($_)' file1.txt > file2.txt")
+		os.system("perl -pe '$_= lc($_)' file.txt > file.txt")
 	elif count % 2 == 1:
-		os.system("perl -pe '$_= uc($_)' file2.txt > file1.txt")
+		os.system("perl -pe '$_= uc($_)' file.txt > file.txt")
 	else:
 		print "Error"
 	#lock.release()
@@ -165,14 +165,22 @@ def concurrentBM():
 	print "Concurrent processes benchmark"
 
 	#lock = Lock()
-	os.system("dd if=/dev/urandom of=file1.txt bs=10KB count=1 > /dev/null 2>&1")
-	os.system("dd if=/dev/urandom of=file2.txt bs=10KB count=1 > /dev/null 2>&1")
+	os.system("dd if=/dev/urandom of=file.txt bs=10KB count=1 > /dev/null 2>&1")
+	children = []
 
-	
 	t1 = datetime.datetime.now()
-	for count in range(0,8):
-		script(count)
-		#returnvalue = Process(target=script, args=(lock, count)).start()
+	for process in range(8):
+		pid = os.fork()
+		if pid:
+			children.append(pid)
+		else:
+			script(process)
+			os._exit(0)
+	for i, child in enumerate(children):
+		os.waitpid(child, 0)
+
+	#script(count)
+	#returnvalue = Process(target=script, args=(lock, count)).start()
 	t2 = datetime.datetime.now()
 	t3 = t2 - t1
 
@@ -181,11 +189,10 @@ def concurrentBM():
 	print "Difference: ", t3
 	print ""
 
-	os.system("rm file1.txt")
-	os.system("rm file2.txt")
+	os.system("rm file.txt")
 
 '''
-def completchild(count):
+def complexchild(count):
 	print "Child " + str(os.getpid()) + " - ",count)
 	#os.system("echo '" + str(count) + " - child ",os.getpid())  + "' >> contextpipe.txt")
 	count += 1
