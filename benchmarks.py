@@ -2,9 +2,6 @@
 
 import datetime
 import os
-#import multiprocessing
-#from multiprocessing import Process, Lock
-#import socket
 
 def copytime(filesrc,filedst):
 	t1 = datetime.datetime.now()
@@ -20,30 +17,27 @@ def copytime(filesrc,filedst):
 	print ""
 
 	os.system("rm copyfile.txt")
+	return t3
 
-def copyfilesBM():	
-	#file = open(filesrc, "rb")
-	#blocksize = os.path.getsize(filesrc)
-	#sock = socket.socket()
-	#sock.connect(("127.0.0.1", 8021))
-	#os.sendfile(filesrc, filedst, 0, blocksize)		
-	
+def copyfilesBM():
 	print "Copy file benchmark"
-
-	filepath = os.getcwd()	
+	filepath = os.getcwd()
 
 	os.system("dd if=/dev/urandom of=4kbFile.txt bs=4KB count=1 > /dev/null 2>&1")
-	copytime("4kbFile.txt",filepath)
+	f1copy = copytime("4kbFile.txt",filepath)
 
 	os.system("dd if=/dev/urandom of=1kbFile.txt bs=1KB count=1 > /dev/null 2>&1")
-	copytime("1kbFile.txt",filepath)
+	f2copy = copytime("1kbFile.txt",filepath)
 
 	os.system("dd if=/dev/urandom of=256bFile.txt bs=256 count=1 > /dev/null 2>&1")
-	copytime("256bFile.txt",filepath)
+	f3copy = copytime("256bFile.txt",filepath)
 
 	os.system("rm 4kbFile.txt")
 	os.system("rm 1kbFile.txt")
 	os.system("rm 256bFile.txt")
+
+	copybenchmarks = [f1copy,f2copy,f3copy]
+	return copybenchmarks
 	
 
 def pipesBM():
@@ -78,6 +72,8 @@ def pipesBM():
 	os.system("rm test.txt")
 	os.system("rm test2.txt")
 
+	return t5
+
 def write1(count):
 	os.system("echo '" + str(count) + "' >> contextpipes.txt")
 	count += 1
@@ -85,7 +81,7 @@ def write1(count):
 	if count <= 100:
 		write2(count)
 	else:
-		pipeswitchingBM(count)
+		trash = pipeswitchingBM(count)
 
 def write2(count):
 	os.system("echo '" + str(count) + "' >> contextpipes.txt")
@@ -94,7 +90,7 @@ def write2(count):
 	if count <= 100:
 		write1(count)
 	else:
-		pipeswitchingBM(count)
+		trash = pipeswitchingBM(count)
 
 def pipeswitchingBM(count):
 	global contextt1
@@ -112,6 +108,7 @@ def pipeswitchingBM(count):
 		print ""
 
 		os.system("rm contextpipes.txt")
+		return t3
 
 def processBM():
 	print "Process creation benchmark"
@@ -132,6 +129,8 @@ def processBM():
 	print "Difference: ", t3
 	print ""
 
+	return t3
+
 def execlBM():
 	print "Execl commands benchmark"
 
@@ -150,6 +149,8 @@ def execlBM():
 	print "Post-execl time: ", t2
 	print "Difference: ", t3
 	print ""
+
+	return t3
 
 def script(count):
 	#lock.acquire()
@@ -191,59 +192,47 @@ def concurrentBM():
 
 	os.system("rm file.txt")
 
-'''
-def complexchild(count):
-	print "Child " + str(os.getpid()) + " - ",count)
-	#os.system("echo '" + str(count) + " - child ",os.getpid())  + "' >> contextpipe.txt")
-	count += 1
-	
-	if count == 10:
-		os.exit(0)
-	else:
-		complexparent(count)
-
-def complexparent(count):	
-	process = os.fork()
-
-	print "Parent " + str(os.getpid()) + " - " + str(count)
-	#os.system("echo '" + str(count) + " - parent " + str(os.getpid())  + "' >> contextpipe.txt")
-	count += 1
-
-	if count == 10:
-		t2 = datetime.datetime.now()
-		t3 = t2 - t1
-		os.exit(0)
-
-	if process == 0:
-		complexchild(count)
-	else:
-		print "in parent else statement"
-		#complexchild(count)
-
-
-def contextBM():
-	print "Context switching benchmark"
-	
-	t1 = datetime.datetime.now()
-	complexparent(0)
-	t2 = datetime.datetime.now()
-	t3 = t2 - t1
-
-	print "Pre-context-switch time: ", t1
-	print "Post-context-switch time: ", t2
-	print "Difference: ", t3
-'''
+	return t3
 
 def main():
 	print "Unix benchmarks"
 	print ""
-	copyfilesBM()
-	pipesBM()
-	pipeswitchingBM(0)
-	processBM()
-	#contextBM()
-	execlBM()
-	concurrentBM()
+
+	benchmarks1 = []
+	benchmarks2 = []
+
+	for count in range(2):
+		if count == 0:
+			os.system("setenforce 0")
+		elif count == 1:
+			os.system("setenforce 1")
+		copyfiles = copyfilesBM()
+		pipes = pipesBM()
+		pipeswitching = pipeswitchingBM(0)
+		process =  processBM()
+		execl = execlBM()
+		concurrent = concurrentBM()
+		
+		f1copy = copyfiles[0]
+		f2copy = copyfiles[1]
+		f3copy = copyfiles[2]
+		
+		if count == 0:
+			benchmarks1 = [f1copy, f2copy, f3copy, pipes, pipeswitching, process, execl, concurrent]
+		elif count == 1:
+			benchmarks2 = [f1copy, f2copy, f3copy, pipes, pipeswitching, process, execl, concurrent]
+
+	for value in benchmarks1:
+		print value
+	print ""
+
+	for value in benchmarks2:
+		print value
+	print ""
+
+	os.system("setenforce 1")
+	print "Benchmark finished"
+
 
 if __name__ == "__main__":
 	main()
