@@ -110,6 +110,70 @@ def pipeswitchingBM(count):
 		os.system("rm contextpipes.txt")
 		return t3
 
+def readfile(count):
+	f = open("pipeswitching.txt", "r")
+	value = int(f.read())
+	f.close()
+
+	intvalue = int(value) + 1
+	if count < 10:
+		writefile(intvalue,count)
+
+def writefile(value,count):
+	os.system("echo " + str(value) + " > pipeswitching.txt")
+	#f = open("pipeswitching.txt", "w")
+	#f.write(str(value))
+	#f.close
+	count += 1
+	readfile(count)
+	
+
+def switchingprocess():
+	f = open("pipeswitching.txt", "r+")
+	value = f.read()
+	value = int(value)
+	value += 1
+	f.seek(0)
+	f.write(str(value))
+	f.truncate()
+	f.close()
+
+def pipeswitchingBM():
+	print "Context switching benchmark"
+	os.system("echo 0 > pipeswitching.txt")
+
+	t1 = datetime.datetime.now()
+	
+	readfile(0)
+	#for num in range(10):
+		#switchingprocess()
+		
+	'''
+	children = []
+
+	t1 = datetime.datetime.now()
+	for process in range(2):
+		pid = os.fork()
+		if pid:
+			children.append(pid)
+		else:
+			switchingprocess()
+			os._exit(0)
+	for i, child in enumerate(children):
+		os.waitpid(child, 0)
+	'''
+
+	t2 = datetime.datetime.now()
+	t3 = t2 - t1
+
+	print "Pre-processes: ", t1
+	print "Post-processes: ", t2
+	print "Difference: ", t3
+	print ""
+
+	os.system("rm pipeswitching.txt")
+	return t3
+
 def processBM():
 	print "Process creation benchmark"
 
@@ -208,7 +272,8 @@ def main():
 			os.system("setenforce 1")
 		copyfiles = copyfilesBM()
 		pipes = pipesBM()
-		pipeswitching = pipeswitchingBM(0)
+		pipeswitching = pipeswitchingBM()
+		#pipeswitching = pipeswitchingBM(0)
 		process =  processBM()
 		execl = execlBM()
 		concurrent = concurrentBM()
@@ -233,22 +298,21 @@ def main():
 	print ""
 
 	os.system("setenforce 1")
-	print "Benchmark complete"
 
-'''
-	print benchmarks1[0].microseconds
-
-	calcs = ["Overhead"]
 	for count in range(8):
-		value = ((benchmarks2[count] - benchmarks1[count]) / benchmarks1[count]) * 100
+		benchmarks1[count] = float(benchmarks1[count].microseconds)
+		benchmarks2[count] = float(benchmarks2[count].microseconds)
+
+	calcs = []
+	for count in range(8):
+		value = abs(((benchmarks2[count] - benchmarks1[count]) / benchmarks1[count]) * 100)
 		calcs.append(value)
 
 	print "Overhead"
 	for value in calcs:
 		print value
 	print ""
-'''
-
+	print "Unix benchmarks complete"
 
 if __name__ == "__main__":
 	main()
