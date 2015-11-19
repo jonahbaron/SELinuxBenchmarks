@@ -38,7 +38,6 @@ def copyfilesBM():
 
 	copybenchmarks = [f1copy,f2copy,f3copy]
 	return copybenchmarks
-	
 
 def pipesBM():
 	print "Pipes benchmark"
@@ -73,6 +72,7 @@ def pipesBM():
 	os.system("rm test2.txt")
 
 	return t5
+
 
 def write1(count):
 	os.system("echo '" + str(count) + "' >> contextpipes.txt")
@@ -222,16 +222,32 @@ def main():
 		elif count == 1:
 			benchmarks2 = [f1copy, f2copy, f3copy, pipes, pipeswitching, process, execl, concurrent]
 
+	print "BaseOS"
 	for value in benchmarks1:
 		print value
 	print ""
 
+	print "SELinux"
 	for value in benchmarks2:
 		print value
 	print ""
 
 	os.system("setenforce 1")
-	print "Benchmark finished"
+	print "Benchmark complete"
+
+'''
+	print benchmarks1[0].microseconds
+
+	calcs = ["Overhead"]
+	for count in range(8):
+		value = ((benchmarks2[count] - benchmarks1[count]) / benchmarks1[count]) * 100
+		calcs.append(value)
+
+	print "Overhead"
+	for value in calcs:
+		print value
+	print ""
+'''
 
 
 if __name__ == "__main__":
