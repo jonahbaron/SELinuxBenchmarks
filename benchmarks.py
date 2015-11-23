@@ -193,7 +193,7 @@ def main():
 	basemarks = []
 	semarks = []
 
-	for count in range(25):
+	for count in range(100):
 		print count
 		for count in range(2):
 			if count == 0:
@@ -248,7 +248,7 @@ def main():
 
 	calcs = []
 	for count in range(8):
-		value = abs(((benchmarks2[count] - benchmarks1[count]) / benchmarks1[count]) * 100)
+		value = ((benchmarks2[count] - benchmarks1[count]) / benchmarks1[count]) * 100
 		calcs.append(value)
 
 	print "Overhead (% change)"
