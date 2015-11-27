@@ -40,11 +40,19 @@ def checkHash(hashes,files):
 			command = "md5sum " + f + " | awk '{ print $1 }'"
 			fileHash = subprocess.check_output(command, shell=True)
 			#fileHash = os.popen("md5sum " + f + " | awk '{ print $1 }'").read()
+			command = "strings " + f + " | md5sum | awk '{ print $1 }'"
+			contentHash = subprocess.check_output(command, shell=True)
+
 			fileHash = fileHash.rstrip()
+			contentHash = contentHash.rstrip()
+			
 			print fileHash
-			if h == fileHash:
+			print contentHash
+
+			if h == fileHash or h == contentHash:
 				print "MALICIOUS FILE DETECTED - ", f
 				badFiles.append(f)
+		print ""
 	print ""
 
 	return badFiles
@@ -86,6 +94,8 @@ def main():
 	badFiles = checkHash(hashes,files)
 
 	print "Malicious files:"
+	if len(badFiles) == 0:
+		print "No malware found"
 	for f in badFiles:
 		print f
 	print ""
