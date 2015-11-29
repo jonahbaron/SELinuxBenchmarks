@@ -1,2 +1,2 @@
-# random
-Random scripts for school and personal projects
+# SELinuxBenchmarks
+Benchmarks script used to evaluate SELinux overhead on a system
