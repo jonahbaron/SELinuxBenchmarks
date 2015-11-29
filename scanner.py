@@ -13,7 +13,9 @@ def getHashes(hashfile):
 	hashes = []
 
 	for line in hashcontent:
-		hashes.append(line.split(None, 1)[0])
+		hashvalue = line.split(None, 1)[0]
+		hashvalue = hashvalue.lower()
+		hashes.append(hashvalue)
 
 	return hashes
 
@@ -28,31 +30,29 @@ def getFiles(directory):
 	return files
 
 def checkHash(hashes,files):
-	print "Checking hashes:"
+	print "Scanning files"
 
 	badFiles = []
 
 	for h in hashes:
 		print "Comparing files against hash - ", h
-		print ""
 
 		for f in files:
 			command = "md5sum " + f + " | awk '{ print $1 }'"
 			fileHash = subprocess.check_output(command, shell=True)
-			#fileHash = os.popen("md5sum " + f + " | awk '{ print $1 }'").read()
+
 			command = "strings " + f + " | md5sum | awk '{ print $1 }'"
 			contentHash = subprocess.check_output(command, shell=True)
 
 			fileHash = fileHash.rstrip()
 			contentHash = contentHash.rstrip()
 			
-			print fileHash
-			print contentHash
+			#print fileHash
+			#print contentHash
 
 			if h == fileHash or h == contentHash:
 				print "MALICIOUS FILE DETECTED - ", f
 				badFiles.append(f)
-		print ""
 	print ""
 
 	return badFiles
@@ -60,7 +60,7 @@ def checkHash(hashes,files):
 def main():
 	print "Malware scanner"
 	print ""
-	print "Number of args: ", len(sys.argv)
+	#print "Number of args: ", len(sys.argv)
 
 	if len(sys.argv) < 2:
 		print "Error - usage: scanner.py hashes [directory]"
@@ -72,28 +72,33 @@ def main():
 	if len(sys.argv) == 3:
 		directory = sys.argv[2]
 
-	print "Arguments: ", hashfile, directory
-	print ""
-
+	#print "Arguments: ", hashfile, directory
+	#print ""
 
 
 	hashes = getHashes(hashfile)
 
-	print "Hashes:"
+	print "Hashes loaded"
+	print len(hashes), " total"
+	print "-----"
 	for line in hashes:
 		print line
 	print ""
 
 	files = getFiles(directory)
 
-	print "Files:"
+	print "Files identified"
+	print len(files), " total"
+	print "-----"
 	for f in files:
 		print f
 	print ""
 
 	badFiles = checkHash(hashes,files)
 
-	print "Malicious files:"
+	print "Malicious files"
+	print len(badFiles), " total"
+	print "-----"
 	if len(badFiles) == 0:
 		print "No malware found"
 	for f in badFiles:
